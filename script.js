@@ -1,26 +1,3 @@
-/* const List_Ideas = [
-    {
-        id:1,
-        titre : "Mon souhait",
-        idee:"Je veux mangerdu Yassa Guinaar pour demain",
-        statut : true,
-    },
-    {
-        id:2,
-        titre : "Mes cours", 
-        idee:"Je veux faire le projet Android demain",
-        statut : false,  
-    },
-    {
-        id:3,
-        titre : "Sport",
-        idee : "Regarder Barça jouer en Europa League",
-        statut : false
-    }
-
-]; */
-/* const rowElement =  document.querySelector("#proposition");
-const ideeForm = document.querySelector('form') */
 const API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTYzOTU4NzM4NSwiZXhwIjoxOTU1MTYzMzg1fQ._7SB37Q9AdLRce99lvgPRc7wF-0iwS6OWJdVfwvdyHM";
 const API_URL = "https://qtjnayfeyqqpjwtzuhxg.supabase.co/rest/v1/idee?";
 
@@ -29,6 +6,9 @@ const propositionElement = document.getElementById("propositions")
 const ideeForm = document.querySelector("form")
 const inputTitre = document.querySelector("input#titre")
 const inputSuggestion = document.querySelector("textarea#suggestion")
+const btnApFilter = document.getElementById("btnApprouverFilter");
+const btnReFilter = document.getElementById("btnRejeterFilter");
+const filterAll = document.getElementById("btnAll")
 
 // NOS FONCTIONS
 const creerUneCarte = (idee) => {
@@ -53,23 +33,62 @@ const creerUneCarte = (idee) => {
   const btnSuccess = document.createElement("button")
   btnSuccess.innerText = "Approuver"
   btnSuccess.classList.add("btn-success")
+  const idbtnsuccess = "btn-success" + idee.id;
+  
   btnSuccess.style.width = "6em"
   
- btnSuccess.addEventListener("click", (ev)=>{
+  btnSuccess.addEventListener("click", (ev)=>{
     ev.preventDefault()
-    divCard.style.borderColor = "#079992"
+    divCard.style.borderColor = "#079992";
+    fetch(API_URL + "id=eq." + idee.id, {
+      method : "PATCH",
+      headers: {
+        apikey: API_KEY,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify({statut : true}),
+    })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data[0].statut === true){
+        divCard.style.borderColor = "#079992";
+        btnSuccess.style.visibility = "hidden"
+        btnRejet.style.visibility = "visible"
+      }
+    })
  })
 
   
  const btnRejet = document.createElement("button")
  btnRejet.innerText = "Rejet"
  btnRejet.classList.add("btn-danger")
+ const idbtnrejet = "btn-daner" + idee.id;
+ 
  btnRejet.style.width = "6em"
  btnRejet.style.marginLeft = "34px"
+ 
  
  btnRejet.addEventListener("click", (ev)=>{
     ev.preventDefault()
     divCard.style.borderColor = "red"
+    fetch(API_URL + "id=eq." + idee.id, {
+      method : "PATCH",
+      headers: {
+        apikey: API_KEY,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify({statut : false}),
+    })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data[0].statut === false){
+        divCard.style.borderColor = "#CE0033";
+        btnRejet.style.visibility = "hidden"
+        btnSuccess.style.visibility = "visible"
+      }
+    })
  })
   cardTitle.textContent = idee.titre
   cardDescription.textContent = idee.suggestion
@@ -82,9 +101,7 @@ const creerUneCarte = (idee) => {
   propositionElement.appendChild(divCard)
 
 }
-
 // VERIFICATION DES MOTS SAISIS
-
 inputSuggestion.addEventListener("input", (event) => {
   const longueurMax = 130
   const contenuSaisi = inputSuggestion.value
@@ -144,6 +161,7 @@ ideeForm.addEventListener("submit", (event) => {
     body: JSON.stringify(nouvelleIdee),
   })
 
+
   // on vide les champs
   inputTitre.value = ""
   inputSuggestion.value = ""
@@ -167,5 +185,61 @@ window.addEventListener("DOMContentLoaded", (event) => {
       idees.forEach((idee) => {
         creerUneCarte(idee)
       })
-    })
+    })  
+})
+
+// Function pour toutes les taches
+filterAll.addEventListener("click", (e) => {
+  e.preventDefault();
+  fetch(API_URL, {
+    method: "GET",
+    headers: {
+      apikey: API_KEY,
+    },
+  })
+    .then((response) => response.json())
+    .then((idees) => {
+      idees.forEach((idee) => {
+        creerUneCarte(idee)
+      })
+    })  
+})
+
+// Function pour filter les taches approuvées
+btnApFilter.addEventListener("click", (e)=>{
+  e.preventDefault();
+
+  propositionElement.innerHTML=""
+  fetch(API_URL + "statut=eq." + true, {
+    method: "GET",
+    headers: {
+      apikey: API_KEY,
+    },
+  })
+    .then((response) => response.json())
+    .then((idees) => {
+      idees.forEach((idee) => {
+        creerUneCarte(idee)
+      })
+    }) 
+    
+})
+//Function pour filter les taches rejetées 
+btnReFilter.addEventListener("click", (e)=>{
+  e.preventDefault()
+  propositionElement.innerHTML=""
+  fetch(API_URL + "statut=eq." + false, {
+    method: "GET",
+    headers: {
+      apikey: API_KEY,
+    },
+  })
+    .then((response) => response.json())
+    .then((idees) => {
+      idees.forEach((idee) => {
+        creerUneCarte(idee)
+        
+      })
+    }) 
+    
 })
